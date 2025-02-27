@@ -4,44 +4,73 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'reac
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import Logo from '../assets/images/titleLogin.svg'; // Il tuo logo in formato SVG
+import Logo from '../assets/images/titleLogin.svg';
+import * as SecureStore from 'expo-secure-store'; // <-- Per memorizzare il token in modo sicuro
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('giovanni');
+  const [password, setPassword] = useState('ciao');
 
-  const handleLogin = () => {
-    // Logica di autenticazione
-    router.push('/home');
+  async function saveToken(key: string, value: string): Promise<void> {
+    await SecureStore.setItemAsync(key, value);
+  }
+
+  const handleLogin = async () => {
+    try {
+      // Crea i parametri in formato URL encoded
+      const formBody = new URLSearchParams();
+      formBody.append('username', username);
+      formBody.append('password', password);
+
+      // 1. Invia la richiesta POST con username e password
+      const response = await fetch('http://192.168.1.7:8080/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: formBody.toString(),
+      });
+
+      if (!response.ok) {
+        throw new Error('Credenziali non valide');
+      }
+
+      // 2. Ricevi la risposta con il token
+      const data = await response.json();
+      const token = data.token; // Assicurati di usare la chiave corretta (es. "token" o "accessToken")
+
+      // 3. Salva il token in modo sicuro
+      await saveToken('userToken', token);
+
+      // 4. Naviga alla pagina home
+      router.push('/home');
+    } catch (error) {
+      console.error('Errore durante il login:', error);
+      // gestisci eventuali errori (es. mostra un messaggio all’utente)
+    }
   };
 
   const handleForgotPassword = () => {
-    // Logica per "Password dimenticata?"
     console.log('Hai cliccato su "Password dimenticata?"');
   };
 
   return (
     <View style={styles.container}>
-      {/* Rendiamo la StatusBar traslucida in modo che lo sfondo arrivi fino al top */}
       <StatusBar translucent backgroundColor="transparent" style="light" />
 
-      {/* Sfondo JPG a tutto schermo */}
       <Image
         source={require('../assets/images/SfondoAutenticazione2.jpg')}
         style={StyleSheet.absoluteFill}
         resizeMode="contain"
       />
 
-      {/* Sezione superiore (50% dello schermo) */}
       <View style={styles.topContainer}>
         <View style={styles.logoWrapper}>
-          {/* Il logo si adatterà alla larghezza disponibile, fino a un massimo di 400px */}
           <Logo width="100%" height={209} />
         </View>
       </View>
 
-      {/* Sezione inferiore (50% dello schermo) */}
       <View style={styles.bottomContainer}>
         <Text style={styles.title}>LOGIN</Text>
 
@@ -64,15 +93,13 @@ export default function LoginScreen() {
           onChangeText={setPassword}
         />
 
-        {/* Scritta "Password dimenticata?" cliccabile */}
-        <TouchableOpacity 
-          onPress={handleForgotPassword} 
+        <TouchableOpacity
+          onPress={handleForgotPassword}
           style={styles.forgotPasswordContainer}
         >
           <Text style={styles.forgotPasswordText}>Password dimenticata?</Text>
         </TouchableOpacity>
 
-        {/* Pulsante Accedi con gradient */}
         <TouchableOpacity onPress={handleLogin}>
           <LinearGradient
             colors={['#BAFF29', '#70A600']}
@@ -89,9 +116,7 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   topContainer: {
     flex: 5,
     justifyContent: 'center',
@@ -135,11 +160,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#282961',
     color: '#F1FFE7',
   },
-  // Contenitore che allinea a destra la scritta "Password dimenticata?"
   forgotPasswordContainer: {
     alignSelf: 'flex-end',
-    marginBottom: 20, // spazio prima del bottone
-    marginRight: 16,  // per allinearlo un po' più a destra
+    marginBottom: 20,
+    marginRight: 16,
   },
   forgotPasswordText: {
     color: '#F1FFE7',
