@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  FlatList, 
-  ActivityIndicator 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import api from '../scripts/request';
@@ -51,12 +51,18 @@ export default function HomeScreen() {
   const greeting = currentHour < 12 ? 'Buongiorno' : 'Buonasera';
   const username = data?.user?.username || '';
 
-  // Renderizza ogni condominio
+  // Renderizza ogni condominio come elemento cliccabile
   const renderItem = ({ item }: { item: any }) => (
-    <View style={styles.itemContainer}>
+    <TouchableOpacity
+      onPress={() => router.push({
+        pathname: '/condominio/[id]',
+        params: { id: item.idCondominio.toString() },
+      })}
+      style={styles.itemContainer}
+    >
       <Text style={styles.itemTitle}>{item.nome}</Text>
       <Text style={styles.itemAddress}>{item.indirizzo}</Text>
-    </View>
+    </TouchableOpacity >
   );
 
   return (
@@ -69,7 +75,7 @@ export default function HomeScreen() {
           <Text style={styles.logoutButtonText}>LOGOUT</Text>
         </TouchableOpacity>
       </View>
-      
+
       {loading ? (
         <ActivityIndicator size="large" color="#70A600" style={styles.loader} />
       ) : error ? (
