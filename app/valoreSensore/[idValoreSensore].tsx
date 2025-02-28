@@ -9,24 +9,27 @@ import {
   FlatList,
   ActivityIndicator
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import api from '../scripts/request';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import api from '../../scripts/request';
 import * as SecureStore from 'expo-secure-store';
 
-export default function HomeScreen() {
+export default function ValoreSensoreScreen() {
   const router = useRouter();
+  const { idValoreSensore, idCondominio, idDispositivo } = useLocalSearchParams();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
 
-  // Effettua la richiesta GET alla rotta protetta
+  // Richiesta dei dati del parametro e dei relativi valori sensore
   const fetchData = async () => {
     try {
-      const response = await api.get('/api/general/my');
+      const response = await api.get(
+        `/api/general/condominio/${idCondominio}/dispositivo/${idDispositivo}/parametro/${idValoreSensore}`
+      );
       setData(response.data);
     } catch (err: any) {
-      console.error('Errore durante la richiesta protetta:', err);
-      setError('Errore durante la richiesta protetta');
+      console.error('Errore durante la richiesta dei dati:', err);
+      setError('Errore durante la richiesta dei dati');
     } finally {
       setLoading(false);
     }
@@ -46,30 +49,21 @@ export default function HomeScreen() {
     }
   };
 
-  // Calcola il saluto in base all'orario
-  const currentHour = new Date().getHours();
-  const greeting = currentHour < 12 ? 'Buongiorno' : 'Buonasera';
-  const username = data?.user?.username || '';
-
-  // Renderizza ogni condominio come elemento cliccabile
+  // Renderizza ogni valore sensore
   const renderItem = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      onPress={() => router.push({
-        pathname: '/condominio/[idCondominio]',
-        params: { idCondominio: item.idCondominio.toString() },
-      })}
-      style={styles.itemContainer}
-    >
-      <Text style={styles.itemTitle}>{item.nome}</Text>
-      <Text style={styles.itemAddress}>{item.indirizzo}</Text>
-    </TouchableOpacity >
+    <View style={styles.sensorItem}>
+      <Text style={styles.sensorText}>Valore: {item.valore}</Text>
+      <Text style={styles.sensorText}>
+        Timestamp: {new Date(item.timestamp).toLocaleString()}
+      </Text>
+    </View>
   );
 
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.greeting}>
-          {greeting}, {username}
+          Parametro: {data?.parametro?.nome}
         </Text>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>LOGOUT</Text>
@@ -81,12 +75,22 @@ export default function HomeScreen() {
       ) : error ? (
         <Text style={styles.errorText}>{error}</Text>
       ) : (
-        <FlatList
-          data={data?.condomini}
-          keyExtractor={(item) => item.idCondominio.toString()}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContainer}
-        />
+        <>
+          <View style={styles.detailsContainer}>
+            <Text style={styles.detailText}>
+              Tipologia: {data?.parametro?.tipologia}
+            </Text>
+            <Text style={styles.detailText}>
+              Unità di misura: {data?.parametro?.unitaMisura}
+            </Text>
+          </View>
+          <FlatList
+            data={data?.valoriSensore}
+            keyExtractor={(item) => item.idSensore.toString()}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContainer}
+          />
+        </>
       )}
     </View>
   );
@@ -131,24 +135,28 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
   },
+  detailsContainer: {
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  detailText: {
+    fontSize: 18,
+    color: '#F1FFE7',
+    fontFamily: 'Poppins-Regular',
+    marginBottom: 8,
+  },
   listContainer: {
     paddingBottom: 20,
     alignItems: 'center',
   },
-  itemContainer: {
+  sensorItem: {
     backgroundColor: '#282961',
     padding: 16,
     borderRadius: 10,
     marginBottom: 12,
     width: '100%',
   },
-  itemTitle: {
-    fontSize: 18,
-    color: '#F1FFE7',
-    fontFamily: 'Poppins-Bold',
-    marginBottom: 4,
-  },
-  itemAddress: {
+  sensorText: {
     fontSize: 16,
     color: '#F1FFE7',
     fontFamily: 'Poppins-Regular',

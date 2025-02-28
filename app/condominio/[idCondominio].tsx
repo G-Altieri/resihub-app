@@ -9,24 +9,25 @@ import {
   FlatList,
   ActivityIndicator
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import api from '../scripts/request';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import api from '../../scripts/request';
 import * as SecureStore from 'expo-secure-store';
 
-export default function HomeScreen() {
+export default function CondominioScreen() {
   const router = useRouter();
+  const { idCondominio } = useLocalSearchParams();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
 
-  // Effettua la richiesta GET alla rotta protetta
+  // Richiesta dei dati del condominio
   const fetchData = async () => {
     try {
-      const response = await api.get('/api/general/my');
+      const response = await api.get(`/api/general/condominio/${idCondominio}`);
       setData(response.data);
     } catch (err: any) {
-      console.error('Errore durante la richiesta protetta:', err);
-      setError('Errore durante la richiesta protetta');
+      console.error('Errore durante la richiesta dei dati:', err);
+      setError('Errore durante la richiesta dei dati');
     } finally {
       setLoading(false);
     }
@@ -46,30 +47,30 @@ export default function HomeScreen() {
     }
   };
 
-  // Calcola il saluto in base all'orario
-  const currentHour = new Date().getHours();
-  const greeting = currentHour < 12 ? 'Buongiorno' : 'Buonasera';
-  const username = data?.user?.username || '';
-
-  // Renderizza ogni condominio come elemento cliccabile
+  // Renderizza ogni dispositivo come elemento cliccabile
   const renderItem = ({ item }: { item: any }) => (
     <TouchableOpacity
-      onPress={() => router.push({
-        pathname: '/condominio/[idCondominio]',
-        params: { idCondominio: item.idCondominio.toString() },
-      })}
+      onPress={() =>
+        router.push({
+          pathname: '../dispositivo/[idDispositivo]',
+          params: {
+            idDispositivo: item.idDispositivo.toString(),
+            idCondominio: idCondominio
+          },
+        })
+      }
       style={styles.itemContainer}
     >
       <Text style={styles.itemTitle}>{item.nome}</Text>
-      <Text style={styles.itemAddress}>{item.indirizzo}</Text>
-    </TouchableOpacity >
+      <Text style={styles.itemAddress}>{item.tipo}</Text>
+    </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <Text style={styles.greeting}>
-          {greeting}, {username}
+          Condominio: {data?.condominio?.nome}
         </Text>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>LOGOUT</Text>
@@ -81,12 +82,24 @@ export default function HomeScreen() {
       ) : error ? (
         <Text style={styles.errorText}>{error}</Text>
       ) : (
-        <FlatList
-          data={data?.condomini}
-          keyExtractor={(item) => item.idCondominio.toString()}
-          renderItem={renderItem}
-          contentContainerStyle={styles.listContainer}
-        />
+        <>
+          <View style={styles.detailsContainer}>
+            <Text style={styles.detailText}>
+              Indirizzo: {data?.condominio?.indirizzo}
+            </Text>
+            {data?.condominio?.amministratore && (
+              <Text style={styles.detailText}>
+                Amministratore: {data.condominio.amministratore.username}
+              </Text>
+            )}
+          </View>
+          <FlatList
+            data={data?.dispositivi}
+            keyExtractor={(item) => item.idDispositivo.toString()}
+            renderItem={renderItem}
+            contentContainerStyle={styles.listContainer}
+          />
+        </>
       )}
     </View>
   );
@@ -130,6 +143,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
     marginTop: 20,
+  },
+  detailsContainer: {
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  detailText: {
+    fontSize: 18,
+    color: '#F1FFE7',
+    fontFamily: 'Poppins-Regular',
+    marginBottom: 8,
   },
   listContainer: {
     paddingBottom: 20,
