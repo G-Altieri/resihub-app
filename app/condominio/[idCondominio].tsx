@@ -7,14 +7,26 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  ActivityIndicator
+  ActivityIndicator,
+  Image,
 } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, useNavigation } from 'expo-router';
 import api from '../../scripts/request';
 import * as SecureStore from 'expo-secure-store';
+import { List } from 'react-native-paper';
+
+// Import degli SVG per le icone
+import LogoCondominioIcon from '../../assets/svg/logoCondominio.svg';
+import CondMarkerIcon from '../../assets/svg/condMarker.svg';
+import CondEnergiaIcon from '../../assets/svg/condEnergia.svg';
+import CondPersoneIcon from '../../assets/svg/condPersone.svg';
+import CondScaleIcon from '../../assets/svg/condScale.svg';
+import CondSuperficieIcon from '../../assets/svg/condSuperficie.svg';
+import CondRegoleIcon from '../../assets/svg/condRegole.svg';
 
 export default function CondominioScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { idCondominio } = useLocalSearchParams();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -55,7 +67,7 @@ export default function CondominioScreen() {
           pathname: '../dispositivo/[idDispositivo]',
           params: {
             idDispositivo: item.idDispositivo.toString(),
-            idCondominio: idCondominio
+            idCondominio: idCondominio,
           },
         })
       }
@@ -66,40 +78,73 @@ export default function CondominioScreen() {
     </TouchableOpacity>
   );
 
+  // Componente header per la FlatList (contiene l'infobox e altri elementi se necessari)
+  const ListHeader = () => (
+    <>
+      {/* Riquadro bianco (in questo caso semi-trasparente) con le informazioni del condominio */}
+      <View style={styles.infoBox}>
+        {/* Nome del condominio */}
+        <View style={styles.infoRow}>
+          <LogoCondominioIcon width={20} height={20} style={styles.icon} />
+          <Text style={styles.infoText}>{data.condominio.nome}</Text>
+        </View>
+        {/* Posizione */}
+        <View style={styles.infoRow}>
+          <CondMarkerIcon width={20} height={20} style={styles.icon} />
+          <Text style={styles.infoText}>{data.condominio.indirizzo}</Text>
+        </View>
+        {/* Classe energetica */}
+        <View style={styles.infoRow}>
+          <CondEnergiaIcon width={20} height={20} style={styles.icon} />
+          <Text style={styles.infoText}>
+            Classe energetica: {data.condominio.classeEnergetica}
+          </Text>
+        </View>
+        {/* Numero di unità abitative */}
+        <View style={styles.infoRow}>
+          <CondPersoneIcon width={20} height={20} style={styles.icon} />
+          <Text style={styles.infoText}>
+            Unità abitative: {data.condominio.unitaAbitative}
+          </Text>
+        </View>
+        {/* Numero di piani */}
+        <View style={styles.infoRow}>
+          <CondScaleIcon width={20} height={20} style={styles.icon} />
+          <Text style={styles.infoText}>
+            Numero di piani: {data.condominio.numeroPiani}
+          </Text>
+        </View>
+        {/* Superficie */}
+        <View style={styles.infoRow}>
+          <CondSuperficieIcon width={20} height={20} style={styles.icon} />
+          <Text style={styles.infoText}>
+            Superficie: {data.condominio.superficie} m²
+          </Text>
+        </View>
+      </View>
+    </>
+  );
+
   return (
     <View style={styles.container}>
-      <View style={styles.headerContainer}>
-        <Text style={styles.greeting}>
-          Condominio: {data?.condominio?.nome}
-        </Text>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>LOGOUT</Text>
-        </TouchableOpacity>
-      </View>
+      <Image
+        source={require('../../assets/images/SfondoResidenza.jpg')}
+        style={StyleSheet.absoluteFill}
+        resizeMode="contain"
+      />
 
       {loading ? (
         <ActivityIndicator size="large" color="#70A600" style={styles.loader} />
       ) : error ? (
         <Text style={styles.errorText}>{error}</Text>
       ) : (
-        <>
-          <View style={styles.detailsContainer}>
-            <Text style={styles.detailText}>
-              Indirizzo: {data?.condominio?.indirizzo}
-            </Text>
-            {data?.condominio?.amministratore && (
-              <Text style={styles.detailText}>
-                Amministratore: {data.condominio.amministratore.username}
-              </Text>
-            )}
-          </View>
-          <FlatList
-            data={data?.dispositivi}
-            keyExtractor={(item) => item.idDispositivo.toString()}
-            renderItem={renderItem}
-            contentContainerStyle={styles.listContainer}
-          />
-        </>
+        <FlatList
+          data={data?.dispositivi}
+          keyExtractor={(item) => item.idDispositivo.toString()}
+          renderItem={renderItem}
+          ListHeaderComponent={ListHeader}
+          contentContainerStyle={styles.listContainer}
+        />
       )}
     </View>
   );
@@ -108,32 +153,9 @@ export default function CondominioScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 80,
-    backgroundColor: '#1A1B41',
+    paddingTop: 90,
     padding: 16,
     justifyContent: 'center',
-  },
-  headerContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  greeting: {
-    fontSize: 24,
-    color: '#F1FFE7',
-    fontFamily: 'Poppins-Bold',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  logoutButton: {
-    backgroundColor: '#FF5555',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-  },
-  logoutButtonText: {
-    color: '#1A1B41',
-    fontSize: 16,
-    fontFamily: 'Poppins-Bold',
   },
   loader: {
     marginTop: 20,
@@ -144,19 +166,36 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
   },
-  detailsContainer: {
+  infoBox: {
+    marginTop: 20,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 16,
+    padding: 16,
     marginBottom: 20,
-    alignItems: 'center',
   },
-  detailText: {
-    fontSize: 18,
-    color: '#F1FFE7',
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  icon: {
+    marginRight: 8,
+    // Assicura che l'icona sia centrata verticalmente
+    alignSelf: 'center',
+  },
+  infoText: {
+    fontSize: 16,
+    color: '#fff',
     fontFamily: 'Poppins-Regular',
-    marginBottom: 8,
+    lineHeight: 20,
+  },
+  accordion: {
+    backgroundColor: '#FFFFFF',
   },
   listContainer: {
     paddingBottom: 20,
-    alignItems: 'center',
+    // Impostato per far partire gli elementi dalla larghezza completa
+    width: '100%',
   },
   itemContainer: {
     backgroundColor: '#282961',

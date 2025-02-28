@@ -6,12 +6,13 @@ import { useFonts } from 'expo-font';
 import * as SecureStore from 'expo-secure-store';
 import { useRouter } from 'expo-router';
 import { authEmitter } from '../utils/auth';
+import CustomHeader from '../components/CustomHeader';
 
 export default function Layout() {
   const [fontsLoaded] = useFonts({
+    'Poppins-Bold': require('../assets/fonts/Poppins-Bold.ttf'),
     'Poppins-Black': require('../assets/fonts/Poppins-Black.ttf'),
     'Poppins-BlackItalic': require('../assets/fonts/Poppins-BlackItalic.ttf'),
-    'Poppins-Bold': require('../assets/fonts/Poppins-Bold.ttf'),
     'Poppins-BoldItalic': require('../assets/fonts/Poppins-BoldItalic.ttf'),
     'Poppins-ExtraBold': require('../assets/fonts/Poppins-ExtraBold.ttf'),
     'Poppins-ExtraBoldItalic': require('../assets/fonts/Poppins-ExtraBoldItalic.ttf'),
@@ -40,7 +41,6 @@ export default function Layout() {
   // Ascolta l'evento di logout
   useEffect(() => {
     const handleLogout = () => {
-      // Reindirizza l'utente alla login screen
       router.replace("/login");
     };
 
@@ -54,41 +54,36 @@ export default function Layout() {
     return null;
   }
 
+
+
   return (
     <>
       <StatusBar style="light" translucent backgroundColor="transparent" />
       <Stack
         initialRouteName={initialRoute}
-
         screenOptions={{
-          // Imposta qui l'animazione predefinita per tutte le schermate
+          // Imposta l'header trasparente (il BlurView farà da sfondo)
           animation: 'fade', // nessuna animazione
-          animationDuration: 500, // durata in millisecondi, regolabile
+          animationDuration: 100, // durata in millisecondi, regolabile
           contentStyle: { backgroundColor: '#1A1B41' },
           headerStyle: { backgroundColor: '#f4511e' },
           headerTintColor: '#fff',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-            fontFamily: 'Poppins-Bold',
+          headerTransparent: true,
+          header: (props) => {
+            // Puoi passare il titolo della pagina tramite le opzioni o ottenere altri dati
+            const title = props.options.title || props.route.name;
+            return <CustomHeader title={title} />;
           },
         }}
       >
-        <Stack.Screen
-          name="index"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="login"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="home"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="+not-found"
-          options={{ title: 'Pagina non trovata' }}
-        />
+        <Stack.Screen name="index" options={{ headerShown: false}} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="home" options={{ title: 'Dashboard' }} />
+        <Stack.Screen name="condominio/[idCondominio]" options={{ title: 'Residenza' }} />
+        <Stack.Screen name="dispositivo/[idDispositivo]" options={{ title: 'Dispositivo' }} />
+        <Stack.Screen name="valoreSensore/[idValoreSensore]" options={{ title: 'Sensore' }} />
+        <Stack.Screen name="realtime/[idRealtime]" options={{ title: 'RealTime' }} />
+        <Stack.Screen name="+not-found" options={{ title: 'Pagina non trovata' }} />
       </Stack>
     </>
   );
