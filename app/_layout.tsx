@@ -76,13 +76,22 @@ export default function Layout() {
           },
         }}
       >
-        <Stack.Screen name="index" options={{ headerShown: false}} />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="login" options={{ headerShown: false }} />
         <Stack.Screen name="home" options={{ title: 'Dashboard' }} />
+
+
         <Stack.Screen name="condominio/[idCondominio]" options={{ title: 'Residenza' }} />
         <Stack.Screen name="dispositivo/[idDispositivo]" options={{ title: 'Dispositivo' }} />
         <Stack.Screen name="valoreSensore/[idValoreSensore]" options={{ title: 'Sensore' }} />
         <Stack.Screen name="realtime/[idRealtime]" options={{ title: 'RealTime' }} />
+
+        <Stack.Screen name="dispositivo/calore/index" options={{ title: 'Calore' }} />
+        <Stack.Screen name="dispositivo/energia/index" options={{ title: 'Energia' }} />
+        <Stack.Screen name="dispositivo/ambienteclima/index" options={{ title: 'Ambiente Clima' }} />
+        <Stack.Screen name="dispositivo/colonnine/index" options={{ title: 'Colonnine' }} />
+        <Stack.Screen name="dispositivo/gestionedispositivi/index" options={{ title: 'Dispositivi' }} />
+
         <Stack.Screen name="+not-found" options={{ title: 'Pagina non trovata' }} />
       </Stack>
     </>

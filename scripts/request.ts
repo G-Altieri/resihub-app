@@ -3,7 +3,7 @@ import * as SecureStore from 'expo-secure-store';
 import { authEmitter, logout } from '../utils/auth';
 
 const api = axios.create({
-  baseURL: 'http://192.168.1.7:8080', // modifica in base al tuo ambiente 192.168.104.250
+  baseURL: 'http://192.168.104.250:8080', // modifica in base al tuo ambiente 192.168.104.250
 });
 
 // Interceptor per aggiungere l'header Authorization
