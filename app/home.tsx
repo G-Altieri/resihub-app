@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   listBox: {
-    backgroundColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     paddingVertical: 16,
     paddingHorizontal: 12,
     borderRadius: 20,

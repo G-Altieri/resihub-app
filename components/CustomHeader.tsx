@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     // Il marginBottom qui non serve più, viene sovrascritto inline
   },
   title: {
-    color: '#F1FFE7',
+    color: '#ECECEC',
     fontSize: 20,
     fontFamily: 'Poppins-SemiBold',
   },
