@@ -22,6 +22,7 @@ import MarcaIcon from '../../assets/svg/sensore/marca.svg';
 import ModelloIcon from '../../assets/svg/sensore/modello.svg';
 import TipoIcon from '../../assets/svg/sensore/tipologia.svg';
 import StatoIcon from '../../assets/svg/sensore/stato.svg';
+import ColIcon from '../../assets/svg/condCollonnine2.svg';
 
 // Import dell'icona per il pulsante Realtime
 import RealtimeIcon from '../../assets/svg/realtime.svg';
@@ -85,6 +86,17 @@ export default function DispositivoScreen() {
       pathname: '../realtime/[idRealtime]',
       params: {
         idRealtime: idDispositivo,
+        idCondominio: idCondominio,
+      },
+    });
+  };
+
+  // Navigazione verso la pagina Sessioni di Ricarica (solo per Colonnine)
+  const handleColonnine = () => {
+    router.push({
+      pathname: './colonnine/sessioniRicarica/[idSessioniRicarica]',
+      params: {
+        idSessioniRicarica: idDispositivo,
         idCondominio: idCondominio,
       },
     });
@@ -170,6 +182,16 @@ export default function DispositivoScreen() {
               </View>
             </TouchableOpacity>
 
+            {/* Il pulsante Sessioni di Ricarica viene mostrato solo se il dispositivo è di tipo Colonnina */}
+            {data?.dispositivo?.tipo.toLowerCase() === 'colonnina' && (
+              <TouchableOpacity style={styles.colonninaButton} onPress={handleColonnine}>
+                <View style={styles.realtimeButtonContent}>
+                  <ColIcon width={30} height={30} style={styles.realtimeIcon} />
+                  <Text style={styles.realtimeButtonText}>Sessioni di Ricarica</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+
             {/* Titolo Lista di Dispositivi */}
             <Text style={styles.listTitle}>Lista di Dispositivi</Text>
 
@@ -218,7 +240,6 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-    // paddingTop: 80,
     padding: 16,
     paddingBottom: 20,
   },
@@ -281,6 +302,16 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 20,
   },
+  colonninaButton: {
+    width: '100%',
+    backgroundColor: '#FFD014',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+
   realtimeButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -292,9 +323,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Bold',
     marginLeft: 4,
   },
-  realtimeIcon: {
-    // Eventuali margini se necessari
-  },
+  realtimeIcon: {},
   listTitle: {
     fontSize: 22,
     fontFamily: 'Poppins-SemiBold',
@@ -302,20 +331,28 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
   },
-  searchBar: {
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 10,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    color: '#fff',
     marginBottom: 20,
   },
-  infoText: {
-    fontSize: 16,
+  searchBarInput: {
+    flex: 1,
+    paddingVertical: 8,
     color: '#fff',
-    textAlign: 'center',
   },
-  // Stili per gli elementi della lista (ispirati ad EnergiaPage)
+  clearButton: {
+    paddingHorizontal: 8,
+  },
+  clearButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    marginTop: 4,
+    fontFamily: 'Poppins-Regular',
+  },
   deviceItem: {
     backgroundColor: 'rgba(0,0,0,0.3)',
     borderRadius: 10,
@@ -337,26 +374,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Regular',
     color: '#fff',
   },
-  searchBarContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    marginBottom: 20,
-  },
-  searchBarInput: {
-    flex: 1,
-    paddingVertical: 8,
+  infoText: {
+    fontSize: 16,
     color: '#fff',
-  },
-  clearButton: {
-    paddingHorizontal: 8,
-  },
-  clearButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    marginTop:4,
-    fontFamily: 'Poppins-Regular',
+    textAlign: 'center',
   },
 });

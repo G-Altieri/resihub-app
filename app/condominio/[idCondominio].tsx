@@ -211,7 +211,7 @@ export default function CondominioScreen() {
                 color="#C1A329"
                 title="Colonnine"
                 subtitle={`${countDevices("Colonnina")} Postazioni`}
-                titleFontSize={17}
+                titleFontSize={15}
                 subtitleFontSize={14}
                 IconComponent={CondCollonnine}
                 style={{ marginLeft: 8 }}

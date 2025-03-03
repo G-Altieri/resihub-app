@@ -7,6 +7,7 @@ const backgrounds: Record<string, ImageSourcePropType> = {
   ambiente: require('../assets/images/SfondoAmbiente.jpg'),
   colonnine: require('../assets/images/SfondoColonnine.jpg'),
   dispositivi: require('../assets/images/SfondoDispositivi.jpg'),
+  profilo: require('../assets/images/SfondoProfilo.jpg'),
   default: require('../assets/images/SfondoEnergia.jpg'),
 };
 

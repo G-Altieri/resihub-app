@@ -32,7 +32,7 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({ title }) => {
   };
 
   const handleAvatarPress = () => {
-    //router.push('/profile');
+    router.push('/profilo/profilo');
   };
 
   return (

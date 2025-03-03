@@ -1,17 +1,21 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
   Image,
+  TouchableOpacity,
+  TextInput,
 } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 export default function ColonninePage() {
   const { data } = useLocalSearchParams();
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Proviamo a parsare i dati ricevuti come JSON
   let parsedData: any = null;
@@ -29,9 +33,17 @@ export default function ColonninePage() {
     );
   }
 
-  // Filtra i dispositivi di tipo "Colonnine"
+  // Recupera l'id del condominio dai dati
+  const idCondominio = parsedData.condominio?.idCondominio;
+
+  // Filtra i dispositivi di tipo "Colonnina"
   const devices = parsedData.dispositivi.filter(
     (device: any) => device.tipo === 'Colonnina'
+  );
+
+  // Filtra in base alla search query
+  const filteredDevices = devices.filter((device: any) =>
+    device.nome.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -42,19 +54,51 @@ export default function ColonninePage() {
         resizeMode="contain"
       />
       <Text style={styles.title}>Dispositivi di Colonnine</Text>
-      {devices.length === 0 ? (
-        <Text style={styles.infoText}>Nessun dispositivo trovato per Colonnine</Text>
+
+      <View style={styles.searchBarContainer}>
+        <TextInput
+          style={styles.searchBarInput}
+          placeholder="Cerca dispositivo..."
+          placeholderTextColor="#ccc"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity
+            style={styles.clearButton}
+            onPress={() => setSearchQuery('')}
+          >
+            <Text style={styles.clearButtonText}>X</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {filteredDevices.length === 0 ? (
+        <Text style={styles.infoText}>Nessun dispositivo trovato</Text>
       ) : (
         <FlatList
-          data={devices}
+          data={filteredDevices}
           keyExtractor={(item) => item.idDispositivo.toString()}
           renderItem={({ item }) => (
-            <View style={styles.deviceItem}>
-              <Text style={styles.deviceName}>{item.nome}</Text>
-              <Text style={styles.deviceDetail}>
-                {item.descrizione || 'Dettagli non disponibili'}
-              </Text>
-            </View>
+            <TouchableOpacity
+              onPress={() =>
+                router.push({
+                  pathname: '../dispositivo/[idDispositivo]',
+                  params: {
+                    idDispositivo: item.idDispositivo.toString(),
+                    idCondominio: idCondominio?.toString(),
+                  },
+                })
+              }
+            >
+              <View style={styles.deviceItem}>
+                <Text style={styles.deviceName}>{item.nome}</Text>
+                <View style={styles.deviceSubInfo}>
+                  <Text style={styles.deviceBrand}>{item.marca || 'Marca non disponibile'}</Text>
+                  <Text style={styles.deviceModel}>{item.modello || 'Modello non disponibile'}</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
           )}
         />
       )}
@@ -96,10 +140,42 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: 'Poppins-SemiBold',
     color: '#fff',
+    marginBottom: 4,
   },
-  deviceDetail: {
+  deviceSubInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  deviceBrand: {
     fontSize: 14,
     fontFamily: 'Poppins-Regular',
     color: '#fff',
+  },
+  deviceModel: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Regular',
+    color: '#fff',
+  },
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    marginBottom: 20,
+  },
+  searchBarInput: {
+    flex: 1,
+    paddingVertical: 8,
+    color: '#fff',
+  },
+  clearButton: {
+    paddingHorizontal: 8,
+  },
+  clearButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    marginTop: 4,
+    fontFamily: 'Poppins-Regular',
   },
 });
