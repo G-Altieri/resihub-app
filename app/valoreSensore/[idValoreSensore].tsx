@@ -25,6 +25,7 @@ import ArrowDx from '../../assets/svg/sensore/arrowdx.svg';
 import SettimanaleIcon from '../../assets/svg/sensore/settimana.svg';
 import MensileIcon from '../../assets/svg/sensore/calendario.svg';
 import MediaIcon from '../../assets/svg/sensore/media.svg';
+import { getBackgroundImage } from './../../components/bgDinamicoDispositivi';
 
 // Interfacce per tipizzare i dati
 interface SensorValue {
@@ -377,11 +378,13 @@ export default function SensorDataScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Sfondo dinamico in base al tipo di dispositivo */}
       <Image
-        source={require('../../assets/images/SfondoEnergia.jpg')}
+        source={getBackgroundImage()}
         style={StyleSheet.absoluteFill}
         resizeMode="contain"
       />
+
       <ScrollView contentContainerStyle={styles.content}>
         {/* Box dispositivo */}
         <View style={styles.sectionBox}>
@@ -588,11 +591,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 90,
-    padding: 16,
     backgroundColor: '#1A1B41',
   },
   content: {
     paddingBottom: 20,
+    padding: 16,
   },
   sectionBox: {
     backgroundColor: 'rgba(0, 0, 0, 0.3)',

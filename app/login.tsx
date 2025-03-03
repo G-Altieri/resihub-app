@@ -161,13 +161,13 @@ const styles = StyleSheet.create({
     fontSize: 30,
     marginBottom: 16,
     textAlign: 'center',
-    color: '#F1FFE7',
+    color: '#ECECEC',
     fontFamily: 'Poppins-Bold',
   },
   label: {
     marginBottom: 4,
     fontSize: 16,
-    color: '#F1FFE7',
+    color: '#ECECEC',
     fontFamily: 'Poppins-SemiBold',
     marginLeft: 16,
   },
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderRadius: 25,
     backgroundColor: '#282961',
-    color: '#F1FFE7',
+    color: '#ECECEC',
   },
   forgotPasswordContainer: {
     alignSelf: 'flex-end',
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   forgotPasswordText: {
-    color: '#F1FFE7',
+    color: '#ECECEC',
     fontFamily: 'Poppins-SemiBold',
     fontSize: 14,
   },
@@ -214,7 +214,7 @@ const dialogStyles = StyleSheet.create({
     fontFamily: 'Poppins-Bold',
   },
   paragraph: {
-    color: '#F1FFE7',
+    color: '#ECECEC',
     fontFamily: 'Poppins-Regular',
   },
   button: {

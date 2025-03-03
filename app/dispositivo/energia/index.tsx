@@ -54,16 +54,31 @@ export default function EnergiaPage() {
         resizeMode="contain"
       />
       <Text style={styles.title}>Dispositivi di Energia</Text>
-      <TextInput
-        style={styles.searchBar}
-        placeholder="Cerca dispositivo..."
-        placeholderTextColor="#ccc"
-        onChangeText={setSearchQuery}
-        value={searchQuery}
-      />
+
+
+      <View style={styles.searchBarContainer}>
+        <TextInput
+          style={styles.searchBarInput}
+          placeholder="Cerca dispositivo..."
+          placeholderTextColor="#ccc"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity
+            style={styles.clearButton}
+            onPress={() => setSearchQuery('')}
+          >
+            <Text style={styles.clearButtonText}>X</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+
+
       {filteredDevices.length === 0 ? (
         <Text style={styles.infoText}>
-          Nessun dispositivo trovato 
+          Nessun dispositivo trovato
         </Text>
       ) : (
         <FlatList
@@ -153,5 +168,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Poppins-Regular',
     color: '#fff',
+  },
+
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    marginBottom: 20,
+  },
+  searchBarInput: {
+    flex: 1,
+    paddingVertical: 8,
+    color: '#fff',
+  },
+  clearButton: {
+    paddingHorizontal: 8,
+  },
+  clearButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    marginTop: 4,
+    fontFamily: 'Poppins-Regular',
   },
 });

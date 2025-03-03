@@ -6,30 +6,68 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  FlatList,
   ActivityIndicator,
-  Dimensions,
+  Image,
+  ScrollView,
+  TextInput,
+  FlatList,
+  ImageSourcePropType,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import api from '../../scripts/request';
-import * as SecureStore from 'expo-secure-store';
-import { LineChart } from 'react-native-chart-kit';
+import { getBackgroundImage } from './../../components/bgDinamicoDispositivi';
+
+// Import delle icone SVG per le info del dispositivo
+import MarcaIcon from '../../assets/svg/sensore/marca.svg';
+import ModelloIcon from '../../assets/svg/sensore/modello.svg';
+import TipoIcon from '../../assets/svg/sensore/tipologia.svg';
+import StatoIcon from '../../assets/svg/sensore/stato.svg';
+
+// Import dell'icona per il pulsante Realtime
+import RealtimeIcon from '../../assets/svg/realtime.svg';
+
+// Definizione delle interfacce per il dispositivo e i suoi parametri
+interface Dispositivo {
+  nome: string;
+  marca: string;
+  modello: string;
+  tipo: string;
+  stato: string;
+}
+
+interface Parametro {
+  idParametro: number;
+  nome: string;
+  tipologia: string;
+  valori?: number[];
+}
+
+interface DispositivoResponse {
+  dispositivo: Dispositivo;
+  parametri: Parametro[];
+}
+
+interface LocalSearchParams {
+  idDispositivo: string;
+  idCondominio: string;
+}
 
 export default function DispositivoScreen() {
   const router = useRouter();
-  const { idDispositivo, idCondominio } = useLocalSearchParams();
-  const [data, setData] = useState<any>(null);
+  const { idDispositivo, idCondominio } = useLocalSearchParams() as any;
+  const [data, setData] = useState<DispositivoResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Richiesta dei dati del dispositivo
   const fetchData = async () => {
     try {
-      const response = await api.get(
+      const response = await api.get<DispositivoResponse>(
         `/api/general/condominio/${idCondominio}/dispositivo/${idDispositivo}`
       );
       setData(response.data);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Errore durante la richiesta dei dati:', err);
       setError('Errore durante la richiesta dei dati');
     } finally {
@@ -41,29 +79,25 @@ export default function DispositivoScreen() {
     fetchData();
   }, []);
 
-  // Logout: cancella il token e reindirizza alla pagina di login
-  const handleLogout = async () => {
-    try {
-      await SecureStore.deleteItemAsync('userToken');
-      router.replace('/login');
-    } catch (err) {
-      console.error('Errore durante il logout:', err);
-    }
-  };
-
   // Navigazione verso la pagina Realtime
   const handleRealtime = () => {
     router.push({
       pathname: '../realtime/[idRealtime]',
       params: {
-        idRealtime: idDispositivo, // usiamo l'idDispositivo come idRealtime
+        idRealtime: idDispositivo,
         idCondominio: idCondominio,
       },
     });
   };
 
-  // Renderizza ogni parametro come elemento cliccabile
-  const renderItem = ({ item }: { item: any }) => (
+  // Filtra i parametri in base al testo inserito nella barra di ricerca
+  const filteredParams =
+    data?.parametri?.filter((param) =>
+      param.nome.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
+
+  // Renderizza ogni parametro come elemento della FlatList (stile come EnergiaPage)
+  const renderParameter = ({ item }: { item: Parametro }) => (
     <TouchableOpacity
       onPress={() =>
         router.push({
@@ -75,125 +109,103 @@ export default function DispositivoScreen() {
           },
         })
       }
-      style={styles.itemContainer}
     >
-      <Text style={styles.itemTitle}>{item.nome}</Text>
-      <Text style={styles.itemSubtitle}>{item.tipologia}</Text>
+      <View style={styles.deviceItem}>
+        <Text style={styles.deviceName}>{item.nome}</Text>
+        <View style={styles.deviceSubInfo}>
+          <Text style={styles.deviceBrand}>{item.tipologia}</Text>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 
-  // Cerca il primo parametro che disponga di dati (valori non nulli e non vuoti)
-  const parameterWithData = data?.parametri?.find(
-    (param: any) =>
-      param.valori &&
-      Array.isArray(param.valori) &&
-      param.valori.length > 0
-  );
-
-  // Prepara i dati per il grafico se esistono
-  const chartData = parameterWithData
-    ? {
-        labels: parameterWithData.valori.map((_: any, index: number) =>
-          (index + 1).toString()
-        ),
-        datasets: [
-          {
-            data: parameterWithData.valori,
-          },
-        ],
-      }
-    : null;
-
   return (
     <View style={styles.container}>
-      {/* Header con dettagli e logout */}
-      <View style={styles.headerContainer}>
-        <Text style={styles.greeting}>
-          Dispositivo: {data?.dispositivo?.nome}
-        </Text>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>LOGOUT</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Sfondo dinamico in base al tipo di dispositivo */}
+      <Image
+        source={getBackgroundImage(data?.dispositivo?.tipo)}
+        style={StyleSheet.absoluteFill}
+        resizeMode="contain"
+      />
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#70A600" style={styles.loader} />
-      ) : error ? (
-        <Text style={styles.errorText}>{error}</Text>
-      ) : (
-        <>
-          <View style={styles.detailsContainer}>
-            <Text style={styles.detailText}>
-              Marca: {data?.dispositivo?.marca}
-            </Text>
-            <Text style={styles.detailText}>
-              Modello: {data?.dispositivo?.modello}
-            </Text>
-            <Text style={styles.detailText}>
-              Tipo: {data?.dispositivo?.tipo}
-            </Text>
-            <Text style={styles.detailText}>
-              Stato: {data?.dispositivo?.stato}
-            </Text>
-          </View>
+      {/* ScrollView per rendere tutta la pagina scorrevole */}
+      <ScrollView contentContainerStyle={styles.scrollContainer} scrollIndicatorInsets={{ bottom: 50 }}>
+        {/* Titolo centrato con il nome del dispositivo */}
+        <View style={styles.headerContainer}>
+          <Text style={styles.greeting}>{data?.dispositivo?.nome}</Text>
+        </View>
 
-          {/* Pulsante per visualizzare i risultati in realtime */}
-          <TouchableOpacity
-            style={styles.realtimeButton}
-            onPress={handleRealtime}
-          >
-            <Text style={styles.realtimeButtonText}>Visualizza Realtime</Text>
-          </TouchableOpacity>
-
-          {/* Grafico a linee per il parametro con dati */}
-          {chartData ? (
-            <View style={styles.chartContainer}>
-              <Text style={styles.chartTitle}>
-                {parameterWithData.nome} ({parameterWithData.unitaMisura})
-              </Text>
-              <LineChart
-                data={chartData}
-                width={Dimensions.get('window').width - 32} // 16 px di padding per lato
-                height={220}
-                chartConfig={{
-                  backgroundColor: '#1A1B41',
-                  backgroundGradientFrom: '#1A1B41',
-                  backgroundGradientTo: '#1A1B41',
-                  decimalPlaces: 2,
-                  color: (opacity = 1) =>
-                    `rgba(255, 255, 255, ${opacity})`,
-                  labelColor: (opacity = 1) =>
-                    `rgba(255, 255, 255, ${opacity})`,
-                  style: {
-                    borderRadius: 16,
-                  },
-                  propsForDots: {
-                    r: '4',
-                    strokeWidth: '2',
-                    stroke: '#ffa726',
-                  },
-                }}
-                style={{
-                  marginVertical: 8,
-                  borderRadius: 16,
-                }}
-              />
+        {loading ? (
+          <ActivityIndicator size="large" color="#70A600" style={styles.loader} />
+        ) : error ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : (
+          <>
+            {/* Box Info Dispositivo con icone */}
+            <View style={styles.sectionBox}>
+              <Text style={styles.sectionTitle}>Info Dispositivo</Text>
+              <View style={styles.infoRow}>
+                <MarcaIcon width={20} height={20} style={styles.icon} />
+                <Text style={styles.detailText}>Marca: {data?.dispositivo?.marca}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <ModelloIcon width={20} height={20} style={styles.icon} />
+                <Text style={styles.detailText}>Modello: {data?.dispositivo?.modello}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <TipoIcon width={20} height={20} style={styles.icon} />
+                <Text style={styles.detailText}>Tipo: {data?.dispositivo?.tipo}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <StatoIcon width={20} height={20} style={styles.icon} />
+                <Text style={styles.detailText}>Stato: {data?.dispositivo?.stato}</Text>
+              </View>
             </View>
-          ) : (
-            <Text style={styles.infoText}>
-              Nessun dato disponibile per il grafico
-            </Text>
-          )}
 
-          {/* Lista dei parametri */}
-          <FlatList
-            data={data?.parametri}
-            keyExtractor={(item) => item.idParametro.toString()}
-            renderItem={renderItem}
-            contentContainerStyle={styles.listContainer}
-          />
-        </>
-      )}
+            {/* Pulsante Visualizza Realtime */}
+            <TouchableOpacity style={styles.realtimeButton} onPress={handleRealtime}>
+              <View style={styles.realtimeButtonContent}>
+                <RealtimeIcon width={30} height={30} style={styles.realtimeIcon} />
+                <Text style={styles.realtimeButtonText}>Dati in Tempo Reale</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Titolo Lista di Dispositivi */}
+            <Text style={styles.listTitle}>Lista di Dispositivi</Text>
+
+            {/* Barra di ricerca per i parametri */}
+            <View style={styles.searchBarContainer}>
+              <TextInput
+                style={styles.searchBarInput}
+                placeholder="Cerca parametro..."
+                placeholderTextColor="#ccc"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity
+                  style={styles.clearButton}
+                  onPress={() => setSearchQuery('')}
+                >
+                  <Text style={styles.clearButtonText}>X</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Elenco dei parametri filtrati */}
+            {filteredParams.length === 0 ? (
+              <Text style={styles.infoText}>Nessun parametro trovato</Text>
+            ) : (
+              <FlatList
+                data={filteredParams}
+                keyExtractor={(item) => item.idParametro.toString()}
+                renderItem={renderParameter}
+                scrollEnabled={false}
+              />
+            )}
+          </>
+        )}
+      </ScrollView>
     </View>
   );
 }
@@ -201,32 +213,26 @@ export default function DispositivoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 80,
     backgroundColor: '#1A1B41',
+    paddingTop: 90,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    // paddingTop: 80,
     padding: 16,
-    justifyContent: 'center',
+    paddingBottom: 20,
   },
   headerContainer: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 0,
+    marginTop: 0,
   },
   greeting: {
     fontSize: 24,
-    color: '#F1FFE7',
+    color: '#ECECEC',
     fontFamily: 'Poppins-Bold',
     textAlign: 'center',
     marginBottom: 12,
-  },
-  logoutButton: {
-    backgroundColor: '#FF5555',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-  },
-  logoutButtonText: {
-    color: '#1A1B41',
-    fontSize: 16,
-    fontFamily: 'Poppins-Bold',
   },
   loader: {
     marginTop: 20,
@@ -237,64 +243,120 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
   },
-  detailsContainer: {
+  sectionBox: {
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 10,
+    padding: 16,
     marginBottom: 20,
+    alignItems: 'flex-start',
+    marginTop: -10,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    color: '#ECECEC',
+    fontFamily: 'Poppins-Bold',
+    textAlign: 'center',
+    width: '100%',
+    marginBottom: 12,
+  },
+  infoRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 8,
+  },
+  icon: {
+    marginRight: 8,
   },
   detailText: {
     fontSize: 18,
-    color: '#F1FFE7',
+    color: '#ECECEC',
     fontFamily: 'Poppins-Regular',
-    marginBottom: 8,
   },
   realtimeButton: {
-    backgroundColor: '#70A600',
+    width: '100%',
+    backgroundColor: '#BAFF29',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 25,
     alignSelf: 'center',
     marginBottom: 20,
   },
+  realtimeButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   realtimeButtonText: {
     color: '#1A1B41',
     fontSize: 16,
     fontFamily: 'Poppins-Bold',
+    marginLeft: 4,
   },
-  chartContainer: {
+  realtimeIcon: {
+    // Eventuali margini se necessari
+  },
+  listTitle: {
+    fontSize: 22,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#fff',
+    textAlign: 'center',
     marginBottom: 20,
-    alignItems: 'center',
   },
-  chartTitle: {
-    fontSize: 20,
-    color: '#F1FFE7',
-    fontFamily: 'Poppins-Bold',
-    marginBottom: 8,
-  },
-  listContainer: {
-    paddingBottom: 20,
-    alignItems: 'center',
-  },
-  itemContainer: {
-    backgroundColor: '#282961',
-    padding: 16,
+  searchBar: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 10,
-    marginBottom: 12,
-    width: '100%',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    color: '#fff',
+    marginBottom: 20,
   },
-  itemTitle: {
+  infoText: {
+    fontSize: 16,
+    color: '#fff',
+    textAlign: 'center',
+  },
+  // Stili per gli elementi della lista (ispirati ad EnergiaPage)
+  deviceItem: {
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+  },
+  deviceName: {
     fontSize: 18,
-    color: '#F1FFE7',
-    fontFamily: 'Poppins-Bold',
+    fontFamily: 'Poppins-SemiBold',
+    color: '#fff',
     marginBottom: 4,
   },
-  itemSubtitle: {
-    fontSize: 16,
-    color: '#F1FFE7',
+  deviceSubInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  deviceBrand: {
+    fontSize: 14,
+    fontFamily: 'Poppins-Regular',
+    color: '#fff',
+  },
+  searchBarContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    marginBottom: 20,
+  },
+  searchBarInput: {
+    flex: 1,
+    paddingVertical: 8,
+    color: '#fff',
+  },
+  clearButton: {
+    paddingHorizontal: 8,
+  },
+  clearButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    marginTop:4,
     fontFamily: 'Poppins-Regular',
   },
-  infoText:{
-    fontSize: 16,
-    color: '#F1FFE7',
-    textAlign: 'center',  
-  }
 });
