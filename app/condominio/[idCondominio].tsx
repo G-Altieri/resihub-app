@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
   condominioName: {
     fontSize: 25,
     fontFamily: 'Poppins-Bold',
-    color: '#F1FFE7',
+    color: '#ECECEC',
     textAlign: 'center',
     marginBottom: 0,
     marginTop: 14,
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     fontFamily: 'Poppins-SemiBold',
-    color: '#F1FFE7',
+    color: '#ECECEC',
     textAlign: 'center',
     marginBottom: 4,
   },

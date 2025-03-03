@@ -16,6 +16,16 @@ import api from '../../scripts/request';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import Svg, { Circle } from 'react-native-svg';
 
+import SensoreIcon from '../../assets/svg/sensore/sensore.svg';
+import TipologiaIcon from '../../assets/svg/sensore/tipologia.svg';
+import UnitaIcon from '../../assets/svg/sensore/unitadimisura.svg';
+import MisurazioneIcon from '../../assets/svg/sensore/ultimovalore.svg';
+import ArrowSx from '../../assets/svg/sensore/arrowsx.svg';
+import ArrowDx from '../../assets/svg/sensore/arrowdx.svg';
+import SettimanaleIcon from '../../assets/svg/sensore/settimana.svg';
+import MensileIcon from '../../assets/svg/sensore/calendario.svg';
+import MediaIcon from '../../assets/svg/sensore/media.svg';
+
 // Interfacce per tipizzare i dati
 interface SensorValue {
   idSensore: number;
@@ -51,7 +61,7 @@ interface SensorData {
   user: any;
 }
 
-// Componente ProgressRing (per il box di misurazione)
+// Componente ProgressRing per il box di misurazione
 const ProgressRing = ({
   size,
   strokeWidth,
@@ -118,7 +128,6 @@ export default function SensorDataScreen() {
   // Stato per navigare fra mesi: 0 = mese corrente, -1 = mese precedente, ecc.
   const [monthOffset, setMonthOffset] = useState<number>(0);
 
-  // Fetch dei dati
   const fetchData = async () => {
     try {
       const response = await api.get(
@@ -149,6 +158,7 @@ export default function SensorDataScreen() {
       </View>
     );
   }
+
   if (error || !data) {
     return (
       <View style={styles.container}>
@@ -195,14 +205,15 @@ export default function SensorDataScreen() {
       : 0;
   });
   const today = new Date();
-  const todayIndex = weekOffset === 0
-    ? last7Days.findIndex(
+  const todayIndex =
+    weekOffset === 0
+      ? last7Days.findIndex(
         (date) =>
           date.getDate() === today.getDate() &&
           date.getMonth() === today.getMonth() &&
           date.getFullYear() === today.getFullYear()
       )
-    : -1;
+      : -1;
   const validWeekData = chartWeekData.filter((x) => !isNaN(x));
   const extendedWeekData = [...chartWeekData];
   const extendedWeekLabels = [...weekLabels];
@@ -249,14 +260,15 @@ export default function SensorDataScreen() {
       ? parseFloat(measurementsForDay[measurementsForDay.length - 1].valore)
       : 0;
   });
-  const todayMonthIndex = monthOffset === 0
-    ? monthDays.findIndex(
+  const todayMonthIndex =
+    monthOffset === 0
+      ? monthDays.findIndex(
         (date) =>
           date.getDate() === today.getDate() &&
           date.getMonth() === today.getMonth() &&
           date.getFullYear() === today.getFullYear()
       )
-    : -1;
+      : -1;
   const validMonthData = monthlyChartData.filter((x) => !isNaN(x));
   const extendedMonthlyData = [...monthlyChartData];
   const extendedMonthLabels = [...monthLabels];
@@ -273,6 +285,15 @@ export default function SensorDataScreen() {
       extendedMonthLabels.push('');
     }
   }
+  // Filtro per ridurre l'affollamento delle label
+  const filteredMonthLabels = extendedMonthLabels.map((label, index) => {
+    if (monthDays.length > 15) {
+      return index % 3 === 0 ? label : '';
+    } else if (monthDays.length > 10) {
+      return index % 2 === 0 ? label : '';
+    }
+    return label;
+  });
   const monthRangeText = `${monthStart.toLocaleDateString('it-IT', {
     day: '2-digit',
     month: '2-digit',
@@ -284,7 +305,7 @@ export default function SensorDataScreen() {
   })}`;
 
   // ===================== GRAFICO A BARRE: Media settimanale del mese =====================
-  const monthData = sortedValues.filter((item) => {
+  const monthDataValues = sortedValues.filter((item) => {
     const d = new Date(item.timestamp);
     return d >= monthStart && d <= monthEnd;
   });
@@ -295,7 +316,7 @@ export default function SensorDataScreen() {
     const weekStartDay = i * 7 + 1;
     const weekEndDay = Math.min((i + 1) * 7, monthEnd.getDate());
     weekLabelsForBar.push(`Set ${i + 1}`);
-    const readings = monthData.filter((item) => {
+    const readings = monthDataValues.filter((item) => {
       const d = new Date(item.timestamp);
       const day = d.getDate();
       return day >= weekStartDay && day <= weekEndDay;
@@ -308,7 +329,6 @@ export default function SensorDataScreen() {
       weeklyAverages.push(0);
     }
   }
-  // Se tutti i valori sono NaN, mostra un messaggio invece del BarChart
   const showBarChart = !weeklyAverages.every((val) => isNaN(val));
 
   // ===================== BOX DI MISURAZIONE (ultimi 7 giorni) =====================
@@ -332,6 +352,29 @@ export default function SensorDataScreen() {
     minute: '2-digit',
   });
 
+  // Stili per i grafici e le sezioni
+  const monthlyChartConfig = {
+    backgroundColor: '#1A1B41',
+    backgroundGradientFrom: '#1A1B41',
+    backgroundGradientTo: '#1A1B41',
+    decimalPlaces: 0,
+    color: (opacity = 1) => `rgba(150,200,250,${opacity})`,
+    labelColor: (opacity = 1) => `rgba(241,255,231,${opacity})`,
+    fillShadowGradient: '#C2E7DA',
+    fillShadowGradientOpacity: 0.3,
+    style: { borderRadius: 0 },
+  };
+
+  const barChartConfig = {
+    backgroundColor: '#1A1B41',
+    backgroundGradientFrom: '#1A1B41',
+    backgroundGradientTo: '#1A1B41',
+    decimalPlaces: 0,
+    color: (opacity = 1) => `rgba(255,165,0,${opacity})`,
+    labelColor: (opacity = 1) => `rgba(241,255,231,${opacity})`,
+    style: { borderRadius: 0 },
+  };
+
   return (
     <View style={styles.container}>
       <Image
@@ -340,36 +383,30 @@ export default function SensorDataScreen() {
         resizeMode="contain"
       />
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Titolo parametro */}
-        <View style={styles.headerContainer}>
-          <Text style={styles.greeting}>{data.parametro.nome}</Text>
-        </View>
-
         {/* Box dispositivo */}
-        <View style={styles.deviceBox}>
+        <View style={styles.sectionBox}>
           <Text style={styles.deviceTitle}>{data.dispositivo.nome}</Text>
-          <Text style={styles.deviceText}>Marca: {data.dispositivo.marca}</Text>
-          <Text style={styles.deviceText}>Modello: {data.dispositivo.modello}</Text>
-          <Text style={styles.deviceText}>Tipo: {data.dispositivo.tipo}</Text>
-          <Text style={styles.deviceText}>Stato: {data.dispositivo.stato}</Text>
+          <View style={styles.row}>
+            <SensoreIcon width={24} height={24} style={styles.icon} />
+            <Text style={styles.sensorText}> {data.parametro.nome}</Text>
+          </View>
+          <View style={styles.row}>
+            <TipologiaIcon width={24} height={24} style={styles.icon} />
+            <Text style={styles.detailText}> {data.parametro.tipologia}</Text>
+          </View>
+          <View style={styles.row}>
+            <UnitaIcon width={24} height={24} style={styles.icon} />
+            <Text style={styles.detailText}> {data.parametro.unitaMisura}</Text>
+          </View>
         </View>
-
-        <View style={styles.separator} />
-
-        {/* Dati parametro */}
-        <View style={styles.detailsContainer}>
-          <Text style={styles.subtitle}>{data.parametro.nome}</Text>
-          <Text style={styles.detailText}>Tipologia: {data.parametro.tipologia}</Text>
-          <Text style={styles.detailText}>Unità di misura: {data.parametro.unitaMisura}</Text>
-          <Text style={styles.detailText}>Valore Min: {data.parametro.valMin}</Text>
-          <Text style={styles.detailText}>Valore Max: {data.parametro.valMax}</Text>
-        </View>
-
-        <View style={styles.separator} />
-
-        {/* Box misurazione */}
-        <View style={styles.measurementBox}>
-          <Text style={styles.subtitle}>Ultimo Valore</Text>
+        {/* Titoletto */}
+        <Text style={styles.titleValori}>Valori Misurazioni</Text>
+        {/* Box ultimo valore */}
+        <View style={styles.sectionBoxUltimaMisurazione}>
+          <View style={styles.rowUltimaMisurazione}>
+            <MisurazioneIcon width={24} height={24} style={styles.icon} />
+            <Text style={styles.subtitle}>Ultima Misurazione</Text>
+          </View>
           <ProgressRing
             size={150}
             strokeWidth={10}
@@ -391,158 +428,157 @@ export default function SensorDataScreen() {
           </Text>
         </View>
 
-        <View style={styles.separator} />
-
-        {/* Navigator settimanale */}
-        <View style={styles.weekNavigator}>
-          <TouchableOpacity onPress={() => setWeekOffset(weekOffset - 1)}>
-            <Text style={styles.arrowText}>{"<"}</Text>
-          </TouchableOpacity>
-          <Text style={styles.weekRangeText}>{weekRangeText}</Text>
-          <TouchableOpacity
-            onPress={() => weekOffset < 0 && setWeekOffset(weekOffset + 1)}
-            disabled={weekOffset === 0}
-          >
-            <Text style={[styles.arrowText, weekOffset === 0 && styles.disabledArrow]}>
-              {">"}
-            </Text>
-          </TouchableOpacity>
+        {/* ---------------------- GRAFICO SETTIMANALE ---------------------- */}
+        <View style={styles.chartBoxWeekly}>
+          <View style={styles.rowUltimaMisurazione}>
+            <SettimanaleIcon width={24} height={28} style={styles.icon} />
+            <Text style={styles.subtitle}>Settimanale</Text>
+          </View>
+          <View style={styles.weekNavigator}>
+            <TouchableOpacity onPress={() => setWeekOffset(weekOffset - 1)}>
+              <ArrowSx style={styles.arrowIcon} width={30} height={30} />
+            </TouchableOpacity>
+            <Text style={styles.weekRangeText}>{weekRangeText}</Text>
+            <TouchableOpacity
+              onPress={() => weekOffset < 0 && setWeekOffset(weekOffset + 1)}
+              disabled={weekOffset === 0}
+            >
+              <ArrowDx style={[styles.arrowIcon, weekOffset === 0 && styles.disabledArrow]} width={30} height={30} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.chartWrapper}>
+            <LineChart
+              data={{
+                labels: extendedWeekLabels,
+                datasets: [{ data: extendedWeekData }],
+              }}
+              width={Dimensions.get('window').width - 42}
+              height={220}
+              withDots={false}
+              renderDotContent={(props: any) => {
+                const { x, y, index } = props;
+                const extraItems = extendedWeekData.length - chartWeekData.length;
+                if (index === todayIndex + extraItems && todayIndex !== -1) {
+                  return (
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: y - 6,
+                        left: x - 6,
+                        width: 12,
+                        height: 12,
+                        borderRadius: 6,
+                        backgroundColor: '#70A600',
+                      }}
+                    />
+                  );
+                }
+                return null;
+              }}
+              yAxisSuffix={` ${data.parametro.unitaMisura}`}
+              chartConfig={{
+                backgroundColor: '#1A1B41',
+                backgroundGradientFrom: '#1A1B41',
+                backgroundGradientTo: '#1A1B41',
+                decimalPlaces: 0,
+                color: (opacity = 1) => `rgba(98,144,195,${opacity})`,
+                labelColor: (opacity = 1) => `rgba(241,255,231,${opacity})`,
+                fillShadowGradient: '#C1292E',
+                fillShadowGradientOpacity: 0.3,
+                style: {},
+              }}
+              style={{ marginVertical: 0, borderRadius: 0, paddingHorizontal: 0, paddingBottom: 0 }}
+            />
+          </View>
         </View>
-        <Text style={styles.subtitle}>Andamento degli ultimi 7 giorni</Text>
-        <LineChart
-          data={{
-            labels: extendedWeekLabels,
-            datasets: [{ data: extendedWeekData }],
-          }}
-          width={Dimensions.get('window').width - 32}
-          height={220}
-          withDots={false}
-          renderDotContent={({ x, y, index }) => {
-            const extraItems = extendedWeekData.length - chartWeekData.length;
-            if (index === todayIndex + extraItems && todayIndex !== -1) {
-              return (
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: y - 6,
-                    left: x - 6,
-                    width: 12,
-                    height: 12,
-                    borderRadius: 6,
-                    backgroundColor: '#70A600',
-                  }}
-                />
-              );
-            }
-            return null;
-          }}
-          yAxisSuffix={` ${data.parametro.unitaMisura}`}
-          chartConfig={{
-            backgroundColor: '#1A1B41',
-            backgroundGradientFrom: '#1A1B41',
-            backgroundGradientTo: '#1A1B41',
-            decimalPlaces: 0,
-            color: (opacity = 1) => `rgba(98,144,195,${opacity})`,
-            labelColor: (opacity = 1) => `rgba(241,255,231,${opacity})`,
-            fillShadowGradient: '#BAFF29',
-            fillShadowGradientOpacity: 0.3,
-            style: { borderRadius: 16 },
-          }}
-          style={{ marginVertical: 8, borderRadius: 16 }}
-        />
+        {/* ---------------------- GRAFICO MENSILE ---------------------- */}
+        <View style={styles.chartBoxMonthly}>
+          <View style={styles.rowUltimaMisurazione}>
+            <MensileIcon width={24} height={28} style={styles.icon} />
+            <Text style={styles.subtitle}>Mensile</Text>
+          </View>
+          <View style={styles.monthNavigator}>
+            <TouchableOpacity onPress={() => setMonthOffset(monthOffset - 1)}>
+              <ArrowSx style={styles.arrowIcon} width={30} height={30} />
+            </TouchableOpacity>
+            <Text style={styles.monthRangeText}>{monthRangeText}</Text>
+            <TouchableOpacity
+              onPress={() => monthOffset < 0 && setMonthOffset(monthOffset + 1)}
+              disabled={monthOffset === 0}
+            >
+              <ArrowDx style={[styles.arrowIcon, monthOffset === 0 && styles.disabledArrow]} width={30} height={30} />
+            </TouchableOpacity>
+          </View>
 
-        <View style={styles.separator} />
 
-        {/* Navigator mensile */}
-        <View style={styles.monthNavigator}>
-          <TouchableOpacity onPress={() => setMonthOffset(monthOffset - 1)}>
-            <Text style={styles.arrowText}>{"<"}</Text>
-          </TouchableOpacity>
-          <Text style={styles.monthRangeText}>{monthRangeText}</Text>
-          <TouchableOpacity
-            onPress={() => monthOffset < 0 && setMonthOffset(monthOffset + 1)}
-            disabled={monthOffset === 0}
-          >
-            <Text style={[styles.arrowText, monthOffset === 0 && styles.disabledArrow]}>
-              {">"}
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.chartWrapper}>
+            <LineChart
+              data={{
+                labels: filteredMonthLabels,
+                datasets: [{ data: extendedMonthlyData }],
+              }}
+              width={Dimensions.get('window').width - 42}
+              height={220}
+              withDots={false}
+              withInnerLines={false}
+              withOuterLines={false}
+              renderDotContent={(props: any) => {
+                const { x, y, index } = props;
+                if (monthOffset === 0 && index === todayMonthIndex) {
+                  return (
+                    <View
+                      style={{
+                        position: 'absolute',
+                        top: y - 6,
+                        left: x - 6,
+                        width: 12,
+                        height: 12,
+                        borderRadius: 6,
+                        backgroundColor: 'transparent', // nota: "transparent" è la scrittura corretta
+                      }}
+                    />
+                  );
+                }
+                return null;
+              }}
+              yAxisSuffix={` ${data.parametro.unitaMisura}`}
+              chartConfig={monthlyChartConfig}
+              style={{ marginVertical: 0, paddingHorizontal: 0, paddingBottom: 0 }}
+            />
+          </View>
+
         </View>
-        <Text style={styles.subtitle}>Andamento del mese</Text>
-        <LineChart
-          data={{
-            labels: extendedMonthLabels,
-            datasets: [{ data: extendedMonthlyData }],
-          }}
-          width={Dimensions.get('window').width - 32}
-          height={220}
-          withDots={false}
-          renderDotContent={({ x, y, index }) => {
-            if (monthOffset === 0 && index === todayMonthIndex) {
-              return (
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: y - 6,
-                    left: x - 6,
-                    width: 12,
-                    height: 12,
-                    borderRadius: 6,
-                    backgroundColor: '#70A600',
-                  }}
-                />
-              );
-            }
-            return null;
-          }}
-          yAxisSuffix={` ${data.parametro.unitaMisura}`}
-          chartConfig={{
-            backgroundColor: '#1A1B41',
-            backgroundGradientFrom: '#1A1B41',
-            backgroundGradientTo: '#1A1B41',
-            decimalPlaces: 0,
-            color: (opacity = 1) => `rgba(150,200,250,${opacity})`,
-            labelColor: (opacity = 1) => `rgba(241,255,231,${opacity})`,
-            fillShadowGradient: '#F5A623',
-            fillShadowGradientOpacity: 0.3,
-            style: { borderRadius: 16 },
-          }}
-          style={{ marginVertical: 8, borderRadius: 16 }}
-        />
 
-        <View style={styles.separator} />
+        {/* ---------------------- GRAFICO A BARRE: Media settimanale del mese ---------------------- */}
+        <View style={styles.chartBoxWeeklyAverage}>
+          <View style={styles.rowUltimaMisurazione}>
+            <MediaIcon width={24} height={28} style={styles.icon} />
+            <Text style={styles.subtitle}>Media del Mese</Text>
+          </View>
+          {weeklyAverages.every((val) => isNaN(val)) ? (
+            <Text style={styles.errorText}>Nessun dato disponibile per il grafico a barre</Text>
+          ) : (
 
-        {/* GRAFICO A BARRE: Media settimanale del mese */}
-        <Text style={styles.subtitle}>Media settimanale del mese</Text>
-        {weeklyAverages.every(val => isNaN(val)) ? (
-          <Text style={styles.errorText}>
-            Nessun dato disponibile per il grafico a barre
-          </Text>
-        ) : (
-          <BarChart
-            data={{
-              labels: weekLabelsForBar,
-              datasets: [
-                {
-                  // Converto eventuali NaN in 0 per la visualizzazione
-                  data: weeklyAverages.map(val => isNaN(val) ? 0 : val),
-                },
-              ],
-            }}
-            width={Dimensions.get('window').width - 32}
-            height={220}
-            chartConfig={{
-              backgroundColor: '#1A1B41',
-              backgroundGradientFrom: '#1A1B41',
-              backgroundGradientTo: '#1A1B41',
-              decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(200,150,100,${opacity})`,
-              labelColor: (opacity = 1) => `rgba(241,255,231,${opacity})`,
-              style: { borderRadius: 16 },
-            }}
-            style={{ marginVertical: 8, borderRadius: 16 }}
-          />
-        )}
+            <View style={styles.chartWrapper}>
+              {/* @ts-ignore */}
+              <BarChart
+                data={{
+                  labels: weekLabelsForBar,
+                  datasets: [
+                    {
+                      data: weeklyAverages.map((val) => (isNaN(val) ? 0 : val)),
+                    },
+                  ],
+                }}
+                width={Dimensions.get('window').width - 50}
+                height={220}
+                chartConfig={barChartConfig}
+                style={{ marginVertical: 0, borderRadius: 0, paddingHorizontal: 0, paddingBottom: 0 }}
+              />
+            </View>
+          )}
+        </View>
+
       </ScrollView>
     </View>
   );
@@ -558,76 +594,49 @@ const styles = StyleSheet.create({
   content: {
     paddingBottom: 20,
   },
-  headerContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  greeting: {
-    fontSize: 24,
-    color: '#F1FFE7',
-    fontFamily: 'Poppins-Bold',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  deviceBox: {
-    backgroundColor: '#000000',
+  sectionBox: {
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     borderRadius: 10,
     padding: 16,
     marginBottom: 20,
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    marginTop: 16,
+    borderColor: '#70A600',
+    borderWidth: 2,
+  },
+  chartWrapper: {
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
+    borderRadius: 10,
+    padding: 2,
+    paddingTop: 10,
+    backgroundColor: "#1A1B41",
+    overflow: 'hidden',
   },
   deviceTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontFamily: 'Poppins-Bold',
-    color: '#F1FFE7',
-    marginBottom: 8,
-    textAlign: 'center',
+    color: '#ECECEC',
+    marginBottom: 12,
+    alignSelf: 'center',
   },
-  deviceText: {
-    fontSize: 16,
-    fontFamily: 'Poppins-Regular',
-    color: '#F1FFE7',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  detailsContainer: {
-    marginBottom: 20,
+  row: {
+    flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 8,
   },
-  subtitle: {
+  icon: {
+    marginRight: 8,
+  },
+  sensorText: {
     fontSize: 20,
     fontFamily: 'Poppins-SemiBold',
-    color: '#F1FFE7',
-    marginBottom: 5,
-    textAlign: 'center',
+    color: '#ECECEC',
   },
   detailText: {
     fontSize: 16,
     fontFamily: 'Poppins-Regular',
-    color: '#F1FFE7',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  separator: {
-    marginVertical: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-  },
-  loader: {
-    marginTop: 20,
-  },
-  errorText: {
-    color: '#FF5555',
-    fontSize: 16,
-    textAlign: 'center',
-    marginTop: 20,
-  },
-  measurementBox: {
-    backgroundColor: '#000000',
-    borderRadius: 10,
-    padding: 16,
-    marginBottom: 20,
-    alignItems: 'center',
+    color: '#ECECEC',
   },
   measurementLabels: {
     flexDirection: 'row',
@@ -635,22 +644,28 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: 10,
   },
+  titleValori: {
+    color: '#ECECEC',
+    fontSize: 24,
+    fontFamily: 'Poppins-SemiBold',
+    marginTop: 10,
+  },
   labelText: {
     fontSize: 16,
     fontFamily: 'Poppins-Regular',
-    color: '#F1FFE7',
+    color: '#ECECEC',
   },
   measurementDate: {
     marginTop: 10,
     fontSize: 14,
     fontFamily: 'Poppins-Regular',
-    color: '#F1FFE7',
+    color: '#ECECEC',
     textAlign: 'center',
   },
   weekRangeText: {
     fontSize: 16,
     fontFamily: 'Poppins-Regular',
-    color: '#F1FFE7',
+    color: '#ECECEC',
     textAlign: 'center',
     marginHorizontal: 10,
   },
@@ -669,13 +684,13 @@ const styles = StyleSheet.create({
   monthRangeText: {
     fontSize: 16,
     fontFamily: 'Poppins-Regular',
-    color: '#F1FFE7',
+    color: '#ECECEC',
     textAlign: 'center',
     marginHorizontal: 10,
   },
-  arrowText: {
-    fontSize: 24,
-    color: '#F1FFE7',
+  arrowIcon: {
+    width: 10,
+    height: 10,
     marginHorizontal: 10,
   },
   disabledArrow: {
@@ -683,9 +698,68 @@ const styles = StyleSheet.create({
   },
   progressText: {
     fontSize: 18,
-    color: '#F1FFE7',
+    color: '#ECECEC',
     fontFamily: 'Poppins-Bold',
     textAlign: 'center',
     marginTop: 50,
+  },
+  errorText: {
+    color: '#FF5555',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  loader: {
+    marginTop: 20,
+  },
+  subtitle: {
+    fontSize: 20,
+    fontFamily: 'Poppins-SemiBold',
+    color: '#ECECEC',
+    marginBottom: 5,
+    textAlign: 'center',
+  },
+  sectionBoxUltimaMisurazione: {
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 20,
+    alignItems: 'center',
+    marginTop: 16,
+    borderColor: '#6290C3',
+    borderWidth: 2,
+  },
+  rowUltimaMisurazione: {
+    flexDirection: 'row',
+    marginBottom: 12,
+    alignSelf: 'center',
+  },
+  // Stili separati per i box dei grafici: puoi modificare qui il colore del bordo o altri parametri
+  chartBoxWeekly: {
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 10,
+    paddingTop: 16,
+    marginBottom: 20,
+    marginTop: 16,
+    borderColor: '#C1292E', // cambia qui il colore per il grafico settimanale
+    borderWidth: 2,
+  },
+  chartBoxMonthly: {
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 10,
+    paddingTop: 16,
+    marginBottom: 20,
+    marginTop: 16,
+    borderColor: '#C2E7DA', // cambia qui il colore per il grafico mensile
+    borderWidth: 2,
+  },
+  chartBoxWeeklyAverage: {
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    borderRadius: 10,
+    paddingTop: 16,
+    marginBottom: 20,
+    marginTop: 16,
+    borderColor: '#FFA500', // cambia qui il colore per il grafico a barre
+    borderWidth: 2,
   },
 });

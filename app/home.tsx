@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 20,
-    color: '#F1FFE7',
+    color: '#ECECEC',
     fontFamily: 'Poppins-Regular',
     textAlign: 'left',
     marginBottom: 14,
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     marginBottom: -4,
     fontSize: 18,
-    color: '#F1FFE7',
+    color: '#ECECEC',
     //backgroundColor: '#70A600',
     fontFamily: 'Poppins-SemiBold',
   },
@@ -246,12 +246,12 @@ const styles = StyleSheet.create({
   },
   itemTitle: {
     fontSize: 16,
-    color: '#F1FFE7',
+    color: '#ECECEC',
     fontFamily: 'Poppins-Bold',
   },
   itemAddress: {
     fontSize: 12,
-    color: '#F1FFE7',
+    color: '#ECECEC',
     fontFamily: 'Poppins-Regular',
   },
 });
