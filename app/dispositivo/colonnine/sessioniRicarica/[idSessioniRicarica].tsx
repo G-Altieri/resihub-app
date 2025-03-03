@@ -11,11 +11,22 @@ import {
     TouchableOpacity,
     Modal,
     Button,
+    StyleSheet as RNStyleSheet,
 } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { useLocalSearchParams } from 'expo-router';
 import api from '../../../../scripts/request';
 import DateTimePicker from '@react-native-community/datetimepicker';
+
+// Import delle icone SVG per le info della colonnina
+import MarcaIcon from '../../../../assets/svg/sensore/marca.svg';
+import ModelloIcon from '../../../../assets/svg/sensore/modello.svg';
+import TipoIcon from '../../../../assets/svg/sensore/tipologia.svg';
+import StatoIcon from '../../../../assets/svg/sensore/stato.svg';
+import CodiceIcon from '../../../../assets/svg/sensore/codice.svg';
+import DurataIcon from '../../../../assets/svg/sensore/durata.svg';
+import CostoIcon from '../../../../assets/svg/sensore/costo.svg';
+
 
 export default function SessioneRicaricaPage() {
     // Estrai il parametro passato, in particolare l'id della colonnina (sessione di ricarica)
@@ -100,15 +111,28 @@ export default function SessioneRicaricaPage() {
         );
     }
 
-    // Contenuto Header (colonnina info, titolo, barra di ricerca e selettore data)
+    // Contenuto Header (riquadro colonnina info, titolo, barra di ricerca e selettore data)
     const ListHeader = () => (
         <View>
             {colonnina && (
-                <View style={styles.colonninaBox}>
-                    <Text style={styles.colonninaTitle}>{colonnina.nome}</Text>
-                    <Text style={styles.colonninaInfo}>Marca: {colonnina.marca}</Text>
-                    <Text style={styles.colonninaInfo}>Modello: {colonnina.modello}</Text>
-                    <Text style={styles.colonninaInfo}>Stato: {colonnina.stato}</Text>
+                <View style={styles.sectionBox}>
+                    <Text style={styles.sectionTitle}>{colonnina.nome}</Text>
+                    <View style={styles.infoRow}>
+                        <MarcaIcon width={20} height={20} style={styles.icon} />
+                        <Text style={styles.detailText}>Marca: {colonnina.marca}</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                        <ModelloIcon width={20} height={20} style={styles.icon} />
+                        <Text style={styles.detailText}>Modello: {colonnina.modello}</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                        <TipoIcon width={20} height={20} style={styles.icon} />
+                        <Text style={styles.detailText}>Tipo: {colonnina.tipo || '-'}</Text>
+                    </View>
+                    <View style={styles.infoRow}>
+                        <StatoIcon width={20} height={20} style={styles.icon} />
+                        <Text style={styles.detailText}>Stato: {colonnina.stato}</Text>
+                    </View>
                 </View>
             )}
             <Text style={styles.mainTitle}>Sessioni di Ricariche</Text>
@@ -140,19 +164,28 @@ export default function SessioneRicaricaPage() {
     );
 
     // Renderizza ogni sessione (lista a tema dark)
+    // Renderizza ogni sessione (lista a tema dark) con icone per codice, durata e costo
     const renderItem = ({ item }: { item: any }) => (
         <TouchableOpacity onPress={() => openSessionModal(item)}>
             <View style={styles.sessionCard}>
-                <Text style={styles.cardText}>Codice: {item.rfid}</Text>
-                <Text style={styles.cardText}>Durata: {item.durata} min</Text>
-                <Text style={styles.cardText}>Costo: € {item.costoTotale}</Text>
+                <View style={styles.cardRow}>
+                    <CodiceIcon width={20} height={20} style={styles.icon} />
+                    <Text style={styles.cardText}>Codice: {item.rfid}</Text>
+                </View>
+                <View style={styles.cardRow}>
+                    <DurataIcon width={20} height={20} style={styles.icon} />
+                    <Text style={styles.cardText}>Durata: {item.durata} min</Text>
+                </View>
+                <View style={styles.cardRow}>
+                    <CostoIcon width={20} height={20} style={styles.icon} />
+                    <Text style={styles.cardText}>Costo: € {item.costoTotale}</Text>
+                </View>
             </View>
         </TouchableOpacity>
     );
 
     // Funzione per formattare il timestamp in "dd/MM/yyyy HH:mm"
-    //@ts-ignore
-    const formatTimestamp = (timestamp) => {
+    const formatTimestamp = (timestamp: string | number | Date) => {
         const date = new Date(timestamp);
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -162,13 +195,12 @@ export default function SessioneRicaricaPage() {
         return `${day}/${month}/${year} ${hours}:${minutes}`;
     };
 
-
     return (
         <View style={styles.outerContainer}>
             {/* Sfondo assoluto */}
             <Image
                 source={require('../../../../assets/images/SfondoHome.jpg')}
-                style={StyleSheet.absoluteFill}
+                style={RNStyleSheet.absoluteFill}
                 resizeMode="cover"
             />
             <FlatList
@@ -190,16 +222,23 @@ export default function SessioneRicaricaPage() {
                         {selectedSession && (
                             <>
                                 <Text style={styles.modalTitle}>Dettaglio Sessione</Text>
-                                {/* <Text style={styles.modalLabel}>Colonnina: {selectedSession.colonnina.nome}</Text> */}
                                 <Text style={styles.modalLabel}>RFID: {selectedSession.rfid}</Text>
-                                <Text style={styles.modalLabel}>Inizio: {formatTimestamp(selectedSession.inizioSessione)}</Text>
-                                <Text style={styles.modalLabel}>Fine: {formatTimestamp(selectedSession.fineSessione)}</Text>
-
-                                <Text style={styles.modalLabel}>Energia Erogata: {selectedSession.energiaErogata} kWh</Text>
+                                <Text style={styles.modalLabel}>
+                                    Inizio: {formatTimestamp(selectedSession.inizioSessione)}
+                                </Text>
+                                <Text style={styles.modalLabel}>
+                                    Fine: {formatTimestamp(selectedSession.fineSessione)}
+                                </Text>
+                                <Text style={styles.modalLabel}>
+                                    Energia Erogata: {selectedSession.energiaErogata} kWh
+                                </Text>
                                 <Text style={styles.modalLabel}>Durata: {selectedSession.durata} minuti</Text>
-                                <Text style={styles.modalLabel}>Potenza Media: {selectedSession.potenzaMedia} kW</Text>
-                                <Text style={styles.modalLabel}>Costo Totale: € {selectedSession.costoTotale}</Text>
-
+                                <Text style={styles.modalLabel}>
+                                    Potenza Media: {selectedSession.potenzaMedia} kW
+                                </Text>
+                                <Text style={styles.modalLabel}>
+                                    Costo Totale: € {selectedSession.costoTotale}
+                                </Text>
                                 {/* Grafici semplici: barre per durata e costo */}
                                 <View style={styles.chartContainer}>
                                     <Text style={styles.chartLabel}>Durata</Text>
@@ -218,7 +257,10 @@ export default function SessioneRicaricaPage() {
                                         <View
                                             style={[
                                                 styles.chartBar,
-                                                { backgroundColor: '#FFAA00', width: `${(selectedSession.costoTotale / maxCosto) * 100}%` },
+                                                {
+                                                    backgroundColor: '#FFAA00',
+                                                    width: `${(selectedSession.costoTotale / maxCosto) * 100}%`,
+                                                },
                                             ]}
                                         />
                                     </View>
@@ -242,7 +284,7 @@ const styles = StyleSheet.create({
     listContainer: {
         paddingBottom: 50,
         paddingHorizontal: 16,
-        paddingTop: 10, // Lasciamo lo spazio per lo sfondo se necessario
+        paddingTop: 10,
     },
     centerContainer: {
         flex: 1,
@@ -254,30 +296,42 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#fff',
         textAlign: 'center',
+        fontFamily: 'Poppins-Regular',
     },
     errorText: {
         fontSize: 16,
         color: '#FF5555',
         textAlign: 'center',
+        fontFamily: 'Poppins-Regular',
     },
-    colonninaBox: {
-        backgroundColor: 'rgba(0,0,0,0.3)',
+    sectionBox: {
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
         borderRadius: 10,
         padding: 16,
         marginBottom: 20,
+        alignItems: 'flex-start',
+        marginTop: -10,
     },
-    colonninaTitle: {
-        fontSize: 16,
+    sectionTitle: {
+        fontSize: 20,
+        color: '#ECECEC',
         fontFamily: 'Poppins-Bold',
-        color: '#fff',
-        marginBottom: 8,
         textAlign: 'center',
+        width: '100%',
+        marginBottom: 12,
     },
-    colonninaInfo: {
-        fontSize: 16,
+    infoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    icon: {
+        marginRight: 8,
+    },
+    detailText: {
+        fontSize: 18,
+        color: '#ECECEC',
         fontFamily: 'Poppins-Regular',
-        color: '#fff',
-        textAlign: 'center',
     },
     mainTitle: {
         fontSize: 24,
@@ -295,6 +349,7 @@ const styles = StyleSheet.create({
     searchInput: {
         color: '#fff',
         paddingVertical: 8,
+        fontFamily: 'Poppins-Regular',
     },
     dateContainer: {
         marginBottom: 20,
@@ -366,6 +421,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#70A600',
         height: 20,
     },
-});
+    cardRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
 
+});
 
