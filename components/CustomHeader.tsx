@@ -28,7 +28,7 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({ title }) => {
   };
 
   const handleBellPress = () => {
-    //router.push('/notifications');
+    router.push('/notifiche/notifiche');
   };
 
   const handleAvatarPress = () => {

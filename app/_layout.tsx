@@ -97,6 +97,8 @@ export default function Layout() {
         <Stack.Screen name="dispositivo/gestionedispositivi/addDevice" options={{ title: 'Aggiungi Dispositivo' }} />
         <Stack.Screen name="dispositivo/gestionedispositivi/editDevice" options={{ title: 'Modifica Dispositivo' }} />
 
+        <Stack.Screen name="notifiche/notifiche" options={{ title: 'Notifiche' }} />
+
         <Stack.Screen name="profilo/profilo" options={{ title: 'Profilo' }} />
 
         <Stack.Screen name="+not-found" options={{ title: 'Pagina non trovata' }} />
