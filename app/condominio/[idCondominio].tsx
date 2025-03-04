@@ -72,6 +72,11 @@ export default function CondominioScreen() {
     if (!data || !data.dispositivi) return 0;
     return data.dispositivi.filter((d: any) => d.tipo === category).length;
   };
+  
+  // Conta tutti i dispositivi
+  const countAllDevices = () => {
+    return data.dispositivi.length
+  }
 
   // Riguadro delle info (senza il nome, che verrà visualizzato sopra)
   const InfoBox = () => (
@@ -202,7 +207,7 @@ export default function CondominioScreen() {
               <GridItem
                 color="#31C129"
                 title="Ambiente Clima"
-                subtitle={`${countDevices("Ambiente e Clima")} Dispositivi`}
+                subtitle={`${countDevices("Ambiente")} Dispositivi`}
                 titleFontSize={16}
                 subtitleFontSize={14}
                 IconComponent={CondClima}
@@ -222,7 +227,7 @@ export default function CondominioScreen() {
               <GridItem
                 color="#616161"
                 title="Gestione Dispositivi"
-                subtitle={`${countDevices("Gestione Dispositivi")} Postazioni`}
+                subtitle={`${countAllDevices()} Dispositivi`}
                 titleFontSize={17}
                 subtitleFontSize={14}
                 IconComponent={CondDispositivo}

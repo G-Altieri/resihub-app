@@ -88,9 +88,15 @@ export default function Layout() {
         <Stack.Screen name="dispositivo/calore/index" options={{ title: 'Calore' }} />
         <Stack.Screen name="dispositivo/energia/index" options={{ title: 'Energia' }} />
         <Stack.Screen name="dispositivo/ambienteclima/index" options={{ title: 'Ambiente Clima' }} />
+
         <Stack.Screen name="dispositivo/colonnine/index" options={{ title: 'Colonnine' }} />
         <Stack.Screen name="dispositivo/colonnine/sessioniRicarica/[idSessioniRicarica]" options={{ title: 'Sessioni Ricariche' }} />
+
+
         <Stack.Screen name="dispositivo/gestionedispositivi/index" options={{ title: 'Dispositivi' }} />
+        <Stack.Screen name="dispositivo/gestionedispositivi/addDevice" options={{ title: 'Aggiungi Dispositivo' }} />
+        <Stack.Screen name="dispositivo/gestionedispositivi/editDevice" options={{ title: 'Modifica Dispositivo' }} />
+
         <Stack.Screen name="profilo/profilo" options={{ title: 'Profilo' }} />
 
         <Stack.Screen name="+not-found" options={{ title: 'Pagina non trovata' }} />

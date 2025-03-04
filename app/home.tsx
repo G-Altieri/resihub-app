@@ -151,7 +151,7 @@ export default function HomeScreen() {
                 styles.itemContainer,
                 {
                   borderColor: markerColors[index % markerColors.length],
-                  borderWidth: 2,
+                  borderWidth: 0,
                 },
               ]}
             >

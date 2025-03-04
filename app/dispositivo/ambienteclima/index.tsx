@@ -38,7 +38,7 @@ export default function AmbienteClimaPage() {
 
   // Filtra i dispositivi di tipo "Colonnine"
   const devices = parsedData.dispositivi.filter(
-    (device: any) => device.tipo === 'Ambiente Clima'
+    (device: any) => device.tipo === 'Ambiente'
   );
 
 
